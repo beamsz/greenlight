@@ -71,7 +71,7 @@ export default function RoomCard({ room }) {
           variant="icon"
           onClick={() => copyInvite(room.friendly_id)}
         >
-          <DocumentDuplicateIcon className="hi-m mt-1 text-muted" />
+          <LinkIcon className="hi-m mt-1 text-muted" />
         </Button>
         <Button variant="brand-outline" className="btn btn-md float-end" onClick={startMeeting.mutate} disabled={startMeeting.isLoading}>
           {startMeeting.isLoading && <Spinner className="me-2" />}
