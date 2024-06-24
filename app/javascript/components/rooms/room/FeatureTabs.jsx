@@ -52,7 +52,7 @@ export default function FeatureTabs() {
   const showRecTabs = (recordValue !== 'false');
 
   return (
-    <Tabs className="wide-white pt-4 mx-0" defaultActiveKey={showRecTabs ? 'recordings' : 'presentation'} unmountOnExit>
+    <Tabs className="wide-white pt-4 mx-0" defaultActiveKey="settings" unmountOnExit>
       {showRecTabs
         && (
           <Tab className="background-whitesmoke" eventKey="recordings" title={t('recording.recordings')}>
