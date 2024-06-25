@@ -18,7 +18,7 @@ import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Stack } from 'react-bootstrap';
 import PropTypes from 'prop-types';
-import { DocumentDuplicateIcon, LinkIcon } from '@heroicons/react/24/outline';
+import { DocumentDuplicateIcon, LinkIcon, KeyIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/auth/AuthProvider';
@@ -27,6 +27,7 @@ import Spinner from '../shared_components/utilities/Spinner';
 import useStartMeeting from '../../hooks/mutations/rooms/useStartMeeting';
 import MeetingBadges from './MeetingBadges';
 import UserBoardIcon from './UserBoardIcon';
+import useRoomSettings from '../../hooks/queries/rooms/useRoomSettings';
 
 export default function RoomCard({ room }) {
   const { t } = useTranslation();
@@ -35,12 +36,22 @@ export default function RoomCard({ room }) {
   const startMeeting = useStartMeeting(room.friendly_id);
   const currentUser = useAuth();
   const localizedTime = localizeDateTimeString(room?.last_session, currentUser?.language);
+  const roomSettings = useRoomSettings(room.friendly_id); 
 
   function copyInvite(friendlyId) {
     navigator.clipboard.writeText(`${window.location}/${friendlyId}/join`);
     toast.success(t('toast.success.room.copied_meeting_url'));
   }
-
+  
+  function copyViewerCode(viewerAccessCode) {    
+    navigator.clipboard.writeText(viewerAccessCode);
+    toast.success(t('toast.success.room.copied_viewer_code'));
+  }
+  function copyModeratorCode(moderatorAccessCode) {    
+    navigator.clipboard.writeText(moderatorAccessCode);
+    toast.success(t('toast.success.room.copied_moderator_code'));
+  }  
+  
   return (
     <Card id="room-card" className="h-100 card-shadow border-0">
       <Card.Body className="pb-0" onClick={handleClick}>
@@ -70,9 +81,28 @@ export default function RoomCard({ room }) {
         <Button
           variant="icon"
           onClick={() => copyInvite(room.friendly_id)}
+          title={t('copy') }
         >
           <LinkIcon className="hi-m mt-1 text-muted" />
-        </Button>
+        </Button>              
+        {roomSettings?.data?.glViewerAccessCode &&
+        <Button
+          variant="icon"
+          onClick={() => copyViewerCode(roomSettings?.data?.glViewerAccessCode)}
+          title={ t('copy_viewer_code') }
+        >
+          <KeyIcon className="hi-m mt-1 text-muted" />
+        </Button>        
+        }
+        {roomSettings?.data?.glModeratorAccessCode &&
+        <Button
+          variant="icon"
+          onClick={() => copyModeratorCode(roomSettings?.data?.glModeratorAccessCode)}
+          title={ t('copy_moderator_code') }
+        >
+          <LockClosedIcon className="hi-m mt-1 text-muted" />
+        </Button>        
+        }         
         <Button variant="brand-outline" className="btn btn-md float-end" onClick={startMeeting.mutate} disabled={startMeeting.isLoading}>
           {startMeeting.isLoading && <Spinner className="me-2" />}
           { room.online ? (
