@@ -119,7 +119,7 @@ export default function RoomSettings() {
               <div className="float-end mt-3">
                 <Stack direction="horizontal" gap={2}>
                   {
-                    room.shared
+                    room?.shared
                       && (
                         <Modal
                           modalButton={(
@@ -134,7 +134,7 @@ export default function RoomSettings() {
                       )
                   }
                   {
-                    (!room.shared || currentUser?.permissions?.ManageRooms === 'true')
+                    (!room?.shared || currentUser?.permissions?.ManageRooms === 'true')
                       && (
                         <Modal
                           modalButton={(

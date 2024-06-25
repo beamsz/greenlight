@@ -40,7 +40,7 @@ export default function UpdateRoomNameForm({ friendlyId }) {
       <h6 className="text-brand">{ t('room.room_name') }</h6>
       <Form onSubmit={handleSubmit(updateRoom.mutate)}>
         <Stack direction="horizontal">
-          <Form.Control type="text" defaultValue={room.name} {...register('room.name', { minLength: 2, maxLength: 255 })} />
+          <Form.Control type="text" defaultValue={room?.name} {...register('room.name', { minLength: 2, maxLength: 255 })} />
           <Button type="submit" variant="brand" className="ms-3"> { t('update') } </Button>
         </Stack>
       </Form>
