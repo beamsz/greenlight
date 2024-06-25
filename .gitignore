@@ -52,3 +52,8 @@
 
 # Ignore environment configuration.
 .env*
+# Ignore hosts configuration.
+hosts
+docker-compose.yml
+/data/
+.gitignore*
