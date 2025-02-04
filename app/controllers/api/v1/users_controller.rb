@@ -35,7 +35,7 @@ module Api
         render_data data: user, status: :ok
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/AbcSize
       # POST /api/v1/users.json
       # Creates and saves a new user record in the database with the provided parameters
       def create
@@ -60,6 +60,9 @@ module Api
 
         # Users created by a user will have the creator language by default with a fallback to the server configured default_locale.
         create_user_params[:language] = current_user&.language || I18n.default_locale if create_user_params[:language].blank?
+
+        # renders an error if the user is signing up with an invalid domain based off site settings
+        return render_error errors: Rails.configuration.custom_error_msgs[:banned_user], status: :forbidden unless valid_domain?
 
         user = UserCreator.new(user_params: create_user_params.except(:invite_token), provider: current_provider, role: default_role).call
 
@@ -94,7 +97,7 @@ module Api
           render_error errors: Rails.configuration.custom_error_msgs[:record_invalid], status: :bad_request
         end
       end
-      # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/AbcSize
 
       # PATCH /api/v1/users/:id.json
       # Updates the values of a user
@@ -166,11 +169,7 @@ module Api
       end
 
       def update_user_params
-        @update_user_params ||= if external_auth?
-                                  params.require(:user).permit(:password, :avatar, :language, :role_id, :invite_token)
-                                else
-                                  params.require(:user).permit(:name, :password, :avatar, :language, :role_id, :invite_token)
-                                end
+        @update_user_params ||= params.require(:user).permit(permitted_params)
       end
 
       def change_password_params
@@ -183,6 +182,25 @@ module Api
         # Try to delete the invitation and return true if it succeeds
         Invitation.destroy_by(email: create_user_params[:email].downcase, provider: current_provider,
                               token: create_user_params[:invite_token]).present?
+      end
+
+      def valid_domain?
+        allowed_domains_emails = SettingGetter.new(setting_name: 'AllowedDomains', provider: current_provider).call
+        return true if allowed_domains_emails.blank?
+
+        domains = allowed_domains_emails.split(',')
+        domains.each do |domain|
+          return true if create_user_params[:email].end_with?(domain)
+        end
+        false
+      end
+
+      def permitted_params
+        is_admin = PermissionsChecker.new(current_user:, permission_names: 'ManageUsers', current_provider:).call
+
+        return %i[password avatar language role_id invite_token] if external_auth? && !is_admin
+
+        %i[name password avatar language role_id invite_token]
       end
     end
   end
