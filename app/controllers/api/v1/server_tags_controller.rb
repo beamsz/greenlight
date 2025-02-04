@@ -14,28 +14,24 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with Greenlight; if not, see <http://www.gnu.org/licenses/>.
 
-# SQLite. Versions 3.8.0 and up are supported.
-#   gem install sqlite3
-#
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem "sqlite3"
-#
-default: &default
-  adapter: postgresql
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 3 } %>
-  timeout: 5000
+# frozen_string_literal: true
 
-development:
-  <<: *default
-  database: greenlight-v3-development
+module Api
+  module V1
+    class ServerTagsController < ApiController
+      # GET /api/v1/server_tags/:friendly_id
+      # Returns a list of all allowed tags&names for the room's owner
+      def show
+        tag_names = Rails.configuration.server_tag_names
+        tag_roles = Rails.configuration.server_tag_roles
+        return render_data data: {}, status: :ok if tag_names.blank?
 
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
-test:
-  <<: *default
-  database: greenlight-v3-test
+        room = Room.find_by(friendly_id: params[:friendly_id])
+        return render_data data: {}, status: :ok if room.nil?
 
-production:
-  <<: *default
-  database: greenlight-v3-production
+        allowed_tag_names = tag_names.reject { |tag, _| tag_roles.key?(tag) && tag_roles[tag].exclude?(room.user.role_id) }
+        render_data data: allowed_tag_names, status: :ok
+      end
+    end
+  end
+end

@@ -27,7 +27,12 @@ Bundler.require(*Rails.groups)
 module Greenlight
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 7.2
+
+    # Please, add to the `ignore` list any other `lib` subdirectories that do
+    # not contain `.rb` files, or that should not be reloaded or eager loaded.
+    # Common ones are `templates`, `generators`, or `middleware`, for example.
+    config.autoload_lib(ignore: %w[assets tasks])
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -86,5 +91,10 @@ module Greenlight
     I18n.load_path += Dir[Rails.root.join('config/locales/*.{rb,yml}').to_s]
     config.i18n.fallbacks = %i[en]
     config.i18n.enforce_available_locales = false
+
+    # Handle server tag config
+    config.server_tag_names = ENV.fetch('SERVER_TAG_NAMES', '').split(',').to_h { |pair| pair.split(':') }
+    config.server_tag_roles = ENV.fetch('SERVER_TAG_ROLES', '').split(',').to_h { |pair| pair.split(':') }
+    config.server_tag_roles = config.server_tag_roles.transform_values! { |v| v.split('/') }
   end
 end
